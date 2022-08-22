@@ -1,6 +1,7 @@
 #Define advanced functions
-#ver.220713
-#1.add get_save_file_name
+#ver.220822
+#1.調整get.py內的get_download_database的split分割路徑後的取用邏輯(1改為-1)  
+#2.新增get.py內的get_download_dicom取用windows系統路徑的split切割方式: path.split('\\') 
 
 
 __all__=['GetInputDir', 'GetDicomDict', 'Add2DF', 'CreateOutputDir', 'GetUnique', 'GetFullPath', 'GetFolderPath','get_target_list',
@@ -103,7 +104,7 @@ def get_filted_database(Input_DB,Filted_key=filter_keys,Filted_col=filter_cols,S
     return(Output_DB)
 
 
-#將放數的資料庫DataBase中的路徑轉為container的相對路徑，並建立下載用的資料表database  #update:2022/7/1
+#將放數的資料庫DataBase中的路徑轉為container的相對路徑，並建立下載用的資料表database  #update:2022/8/22
 def get_download_database(Input_DB,Dicom_point='../storage',Download_path='../128_C/Dicom-default',Save_csv_name=False):
     for i,InputDir in tqdm(enumerate(Input_DB['InputDir'])):
         Output_DB=Input_DB
@@ -111,7 +112,7 @@ def get_download_database(Input_DB,Dicom_point='../storage',Download_path='../12
         #置換root of I/O:
         try:  #NaN會導致錯誤，加上除錯功能 (update:2022/7/1)
             split=InputDir.split('storage/')  #20220521 update: '/storage' replaced by 'storage/'
-            file=split[1]
+            file=split[-1]  #202220822 update: 由1改取-1，以排除路徑內沒有'storage/'的狀況
             IN=os.path.join(Dicom_point,file)  #new InputDir  #20220521 update: '/storage' replaced by 'storage/'
 
             month=str(Input_DB.loc[i,'StudyDate'])[4:6]
@@ -131,7 +132,7 @@ def get_download_database(Input_DB,Dicom_point='../storage',Download_path='../12
             
     return(Output_DB)
 
-#將下載資料表內的資料去連結並存至指定位置，另外建立下載影像清單download_sorting_list作為病歷對照表  #update:2022/7/1
+#將下載資料表內的資料去連結並存至指定位置，另外建立下載影像清單download_sorting_list作為病歷對照表  #update:2022/8/22
 def get_download_dicom(Input_DB):
     for p,q in tqdm(enumerate(Input_DB['InputDir'])):
         try:    #新增除錯 (update:2022/7/1)
@@ -139,7 +140,7 @@ def get_download_dicom(Input_DB):
             o=Input_DB.loc[p,'OutputDir']  #取得full name of output dicom
 
             #取得資料夾名稱，並建立子資料夾        
-            split=o.split('/')
+            split=o.split('/')  #split=o.split('\\') #for windows  #20220822 update: 新增windows路徑的切割方式
             folder=''
             for s in split[:-1]:
                 folder=os.path.join(folder,s)
